@@ -29,8 +29,6 @@ The response shall preserve the original meaning and use of modal verbs such as 
 Points supported by data should list the relevant reports as references as follows:
 "This is an example sentence supported by data references [^Data:Reports(report id)][^Data:Reports(report id)]"
 
-**Do not list more than 5 record ids in a single reference**. Instead, list the top 5 most relevant record ids and add "+more" to indicate that there are more.
-
 ===============
 For example:
 user question: Is Person X currently under investigation for alleged illegal activities or unethical behavior?
@@ -46,7 +44,7 @@ user question: Is Person X currently under investigation for alleged illegal act
 answer:
 {{
     "points": [
-        {{"description": "Person X is the owner of Company Y and subject to many allegations of wrongdoing [^Data:Reports(1)][^Data:Reports(2)][^Data:Reports(3)][^Data:Reports(4)].", "score": 85}},
+        {{"description": "Person X is the owner of Company Y and subject to many allegations of wrongdoing [^Data:Reports(1)][^Data:Reports(2)][^Data:Reports(3)][^Data:Reports(5)].", "score": 85}},
         {{"description": "He is also CEO of company X [^Data:Reports(4)]", "score": 75}}
     ]
 }}

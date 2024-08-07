@@ -25,11 +25,9 @@ The response shall preserve the original meaning and use of modal verbs such as 
 
 The response should also preserve all the data references previously included in the analysts' reports, but do not mention the roles of multiple analysts in the analysis process.
 
-**Do not list more than 5 record ids in a single reference**. Instead, list the top 5 most relevant record ids and add "+more" to indicate that there are more.
-
 For example:
 
-"Person X is the owner of Company Y and subject to many allegations of wrongdoing [^Data:Reports(2)][^Data:Reports(7)][^Data:Reports(34)][^Data:Reports(46)][^Data:Reports(64,+more)]. He is also CEO of company X [^Data:Reports(1)][^Data:Reports(3)]"
+"Person X is the owner of Company Y and subject to many allegations of wrongdoing [^Data:Reports(2)][^Data:Reports(7)][^Data:Reports(34)][^Data:Reports(46)][^Data:Reports(64)]. He is also CEO of company X [^Data:Reports(1)][^Data:Reports(3)]"
 
 where 1, 2, 3, 7, 34, 46, and 64 represent the id (not the index) of the relevant data record.
 
@@ -60,11 +58,9 @@ The response shall preserve the original meaning and use of modal verbs such as 
 
 The response should also preserve all the data references previously included in the analysts' reports, but do not mention the roles of multiple analysts in the analysis process.
 
-**Do not list more than 5 record ids in a single reference**. Instead, list the top 5 most relevant record ids and add "+more" to indicate that there are more.
-
 For example:
 
-"Person X is the owner of Company Y and subject to many allegations of wrongdoing [^Data:Reports(2)][^Data:Reports(7)][^Data:Reports(34)][^Data:Reports(46)][^Data:Reports(64,+more)]. He is also CEO of company X [^Data:Reports(1)][^Data:Reports(3)]"
+"Person X is the owner of Company Y and subject to many allegations of wrongdoing [^Data:Reports(2)][^Data:Reports(7)][^Data:Reports(34)][^Data:Reports(46)][^Data:Reports(64)]. He is also CEO of company X [^Data:Reports(1)][^Data:Reports(3)]"
 
 where 1, 2, 3, 7, 34, 46, and 64 represent the id (not the index) of the relevant data record.
 
@@ -79,7 +75,7 @@ Add sections and commentary to the response as appropriate for the length and fo
 """
 
 NO_DATA_ANSWER = (
-    "I am sorry but I am unable to answer this question given the provided data."
+    "非常抱歉，原文中没有足够的信息来回答您的问题。"
 )
 
 GENERAL_KNOWLEDGE_INSTRUCTION = """
