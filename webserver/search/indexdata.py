@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Optional, cast
 
 import pandas as pd
 
@@ -10,8 +10,12 @@ from ..utils import consts
 
 
 async def get_index_data(input_dir: str, datatype: str, id: Optional[int] = None):
+    entity_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_TABLE}.parquet")
+    text_unit_df = pd.read_parquet(f"{input_dir}/{consts.TEXT_UNIT_TABLE}.parquet")
+    entity_embedding_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_EMBEDDING_TABLE}.parquet")
+    report_df = pd.read_parquet(f"{input_dir}/{consts.COMMUNITY_REPORT_TABLE}.parquet")
     if datatype == "entities":
-        return await get_entity(input_dir, id)
+        return await get_entity(entity_df, text_unit_df, entity_embedding_df, report_df, id)
     elif datatype == "claims":
         return await get_claim(input_dir, id)
     elif datatype == "sources":
@@ -24,16 +28,44 @@ async def get_index_data(input_dir: str, datatype: str, id: Optional[int] = None
         raise ValueError(f"Unknown datatype: {datatype}")
 
 
-async def get_entity(input_dir: str, row_id: Optional[int] = None) -> Entity:
-    entity_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_TABLE}.parquet")
-    entity_embedding_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_EMBEDDING_TABLE}.parquet")
+# async def get_entity(input_dir: str, row_id: Optional[int] = None) -> Entity:
+#     entity_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_TABLE}.parquet")
+#     entity_embedding_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_EMBEDDING_TABLE}.parquet")
 
-    entities = read_indexer_entities(entity_df, entity_embedding_df, consts.COMMUNITY_LEVEL)
-    # TODO optimize performance using like database or dict in memory
-    for entity in entities:
-        if int(entity.short_id) == row_id:
-            return entity
-    raise ValueError(f"Not Found entity id {row_id}")
+#     entities = read_indexer_entities(entity_df, entity_embedding_df, consts.COMMUNITY_LEVEL)
+#     # TODO optimize performance using like database or dict in memory
+#     for entity in entities:
+#         if int(entity.short_id) == row_id:
+#             return entity
+#     raise ValueError(f"Not Found entity id {row_id}")
+
+
+async def get_entity(entity_df: pd.DataFrame, text_unit_df: pd.DataFrame, entity_embedding_df: pd.DataFrame, report_df: pd.DataFrame, row_id: Optional[int] = None) -> dict:
+    entity_df = cast(pd.DataFrame, entity_df[["title", "degree", "community"]]).rename(
+        columns={"title": "name", "degree": "rank"}
+    )
+
+    entity_df["community"] = entity_df["community"].fillna(-1)
+    entity_df["community"] = entity_df["community"].astype(int)
+    entity_df["rank"] = entity_df["rank"].astype(int)
+
+    # for duplicate entities, keep the one with the highest community level
+    entity_df = (
+        entity_df.groupby(["name", "rank"]).agg({"community": "max"}).reset_index()
+    )
+    entity_df["community"] = entity_df["community"].apply(lambda x: [str(x)])
+    entity_df = entity_df.merge(
+        entity_embedding_df, on="name", how="inner"
+    ).drop_duplicates(subset=["name"])
+    entity = entity_df[entity_df["human_readable_id"] == row_id].to_dict("records")[0]
+    for i, short_id in enumerate(entity["community"]):
+        community = report_df[report_df["community"] == short_id]
+        entity["community"][i] = (community["community"].to_numpy()[0], community["title"].to_numpy()[0])
+    for i, id in enumerate(entity["text_unit_ids"]):
+        text_unit = text_unit_df[text_unit_df["id"] == id]
+        entity["text_unit_ids"][i] = (text_unit.index[0], id)
+    # read entity dataframe to knowledge model objects
+    return entity
 
 
 async def get_claim(input_dir: str, row_id: Optional[int] = None) -> Covariate:

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Entity Information</title>
+    <title>实体{{ id }}：{{ data.human_readable_id }}：{{ data.name }}</title>
     <style>
         table {
             margin: auto;
@@ -22,20 +22,17 @@
     </style>
 </head>
 <body>
-    <h1 style="text-align: center;">Entity Information</h1>
+    <h1 style="text-align: center;">实体{{ data.human_readable_id }}：{{ data.name }}</h1>
     <table>
-        <tr><th>Attribute</th><th>Value</th></tr>
-        <tr><td>Name</td><td>{{ data.title }}</td></tr>
-        <tr><td>Type</td><td>{{ data.type }}</td></tr>
-        <tr><td>Description</td><td>{{ data.description }}</td></tr>
-        <tr><td>Description Embedding</td><td>Length: {{ data.description_embedding | length }}</td></tr>
-        <tr><td>Name Embedding</td><td>{{ data.name_embedding }}</td></tr>
-        <tr><td>Graph Embedding</td><td>{{ data.graph_embedding }}</td></tr>
-        <tr><td>Community IDs</td><td>{{ data.community_ids }}</td></tr>
-        <tr><td>Text Unit IDs</td><td>{{ data.text_unit_ids }}</td></tr>
-        <tr><td>Document IDs</td><td>{{ data.document_ids }}</td></tr>
-        <tr><td>Rank</td><td>{{ data.rank }}</td></tr>
-        <tr><td>Attributes</td><td>{{ data.attributes }}</td></tr>
+        <tr><th>属性</th><th>值</th></tr>
+        <tr><td>ID</td><td>{{ data.id }}</td></tr>
+        <tr><td>名称</td><td>{{ data.name }}</td></tr>
+        <tr><td>类型</td><td>{{ data.type }}</td></tr>
+        <tr><td>描述</td><td>{{ data.description }}</td></tr>
+        <tr><td>描述Embedding</td><td>{{ data.description_embedding }}</td></tr>
+        <tr><td>所在社区</td><td>{% for i, report in data.community %}<a href="/v1/references/{{ index_id }}/reports/{{ i }}">{{ report }}</a> {% endfor %}</td></tr>
+        <tr><td>所在文本块</td><td>{% for i, id in data.text_unit_ids %}<li><a href="/v1/references/{{ index_id }}/sources/{{ i }}">{{ id }}</a></li>{% endfor %}</td></tr>
+        <tr><td>重要性指数</td><td>{{ data.rank }}</td></tr>
     </table>
 </body>
 </html>

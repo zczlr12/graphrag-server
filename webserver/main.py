@@ -297,10 +297,10 @@ async def get_reference(index_id: str, datatype: str, id: int):
 
     data = await search.get_index_data(input_dir, datatype, id)
     html_file_path = os.path.join("webserver", "templates", f"{datatype}_template.html")
-    with open(html_file_path, 'r') as file:
+    with open(html_file_path, encoding="utf-8") as file:
         html_content = file.read()
     template = Template(html_content)
-    html_content = template.render(data=data)
+    html_content = template.render(index_id=index_id, data=data)
     return HTMLResponse(content=html_content)
 
 
