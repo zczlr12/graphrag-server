@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>文档{{ idx }}：{{ data.title }}</title>
+    <style>
+        table {
+            margin: auto;
+            border-collapse: collapse;
+            width: 50%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+            text-align: center;
+        }
+        td {
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">文档{{ idx }}：{{ data.title }}</h1>
+    <table>
+        <tr><th>属性</th><th>值</th></tr>
+        <tr><td>ID</td><td>{{ data.id }}</td></tr>
+        <tr><td>标题</td><td>{{ data.title }}</td></tr>
+        <tr><td>原文</td><td>{{ data.raw_content }}</td></tr>
+        <tr><td>所含文本块</td><td>{{ data.text_unit_ids }}</td></tr>
+    </table>
+</body>
+</html>

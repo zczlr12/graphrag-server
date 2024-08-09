@@ -70,12 +70,12 @@ question_gen: LocalQuestionGen
 
 
 class CustomSearchCallback(GlobalSearchLLMCallback):
-    stop_sign = '<<STOP>><<停止>>🅿️<<STOP>><<停止>>'
+    stop_sign = "<<STOP>><<停止>>🅿️<<STOP>><<停止>>"
 
     def __init__(self):
         super().__init__()
         self.token_queue = asyncio.Queue()
-        self.usage: Optional[CompletionUsage] = None
+        self.usage: CompletionUsage | None = None
 
     def on_map_response_start(self, map_response_contexts: list[str]):
         super().on_map_response_start(map_response_contexts)
@@ -156,7 +156,7 @@ async def generate_chunks(callback, request_model, future: gtypes.TypedFuture[Se
     if reference:
         index_id = request_model.removesuffix("-global").removesuffix("-local")
         content = f"\n{utils.generate_ref_links(reference, index_id)}"
-    finish_reason = 'stop'
+    finish_reason = "stop"
     chunk = ChatCompletionChunk(
         id=f"chatcmpl-{uuid.uuid4().hex}",
         created=int(time.time()),
@@ -293,20 +293,20 @@ async def list_models():
     return response
 
 
-@app.get("/v1/references/{index_id}/{datatype}/{id}", response_class=HTMLResponse)
-async def get_reference(index_id: str, datatype: str, id: int):
+@app.get("/v1/references/{index_id}/{datatype}/{idx}", response_class=HTMLResponse)
+async def get_reference(index_id: str, datatype: str, idx: int):
     input_dir = os.path.join(settings.data, index_id, "artifacts")
     if not os.path.exists(input_dir):
         raise HTTPException(status_code=404, detail=f"{index_id} not found")
-    if datatype not in ["entities", "claims", "sources", "reports", "relationships"]:
+    if datatype not in ["documents", "entities", "claims", "sources", "reports", "relationships"]:
         raise HTTPException(status_code=404, detail=f"{datatype} not found")
 
-    data = await search.get_index_data(input_dir, datatype, id)
+    data = await search.get_index_data(input_dir, datatype, idx)
     html_file_path = os.path.join("webserver", "templates", f"{datatype}_template.html")
     with open(html_file_path, encoding="utf-8") as file:
         html_content = file.read()
     template = Template(html_content)
-    html_content = template.render(index_id=index_id, data=data)
+    html_content = template.render(index_id=index_id, idx=idx, data=data)
     return HTMLResponse(content=html_content)
 
 

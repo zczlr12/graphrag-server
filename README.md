@@ -1,13 +1,11 @@
-# GraphRAG customized by KylinMountain
-- I have added websever to support streaming output immediately.
-- I have fixed error when using local embedding service like LM Studio
-- I have fixed index error after prompt tune
-- I have fixed the strategy not loaded when setting entity extraction using NLTK.
-- I have added advice question api
-- I have added reference link to the entity、report or relationship refered in output, you can access it.
-- Support any desktop application or web application compatible with OpenAI SDK.
+# graphrag-server副本，原作者为KylinMountain
 
-# GraphRAG 定制版
+## 新内容
+
+- 优化索引内容
+- 调整query prompts
+
+## 原作者内容
 - 我添加了Web服务器，以支持真即时流式输出。
 - 我修复了使用本地嵌入服务（如LM Studio）时的错误。
 - 我修复了提示调整后索引错误的问题。
@@ -21,7 +19,7 @@
 
 ![image](https://github.com/user-attachments/assets/ab7a8d2e-aeec-4a0c-afb9-97086b9c7b2a)
 
-# 如何安装How to install
+## 如何安装How to install
 - 克隆本项目 Clone the repo
 ```
 git clone https://github.com/KylinMountain/graphrag.git
@@ -29,8 +27,8 @@ cd graphrag
 ```
 - 建立虚拟环境 Create virtual env
 ```
-conda create -n graphrag python=3.10
-conda activate graphrag
+conda create -n graphrag-server -y
+conda activate graphrag-server
 ```
 - 安装poetry Install poetry
 ```

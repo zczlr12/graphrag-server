@@ -61,5 +61,5 @@ Do not include information where the supporting evidence for it is not provided.
 
 {response_type}
 
-Add sections and commentary to the response as appropriate for the length and format. Style the response in markdown.
+Add sections and commentary to the response as appropriate for the length and format. Return the response in Chinese in markdown style.
 """
