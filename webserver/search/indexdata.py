@@ -12,12 +12,13 @@ from ..utils import consts
 pd.set_option("display.max_columns", None)
 
 
-async def get_index_data(input_dir: str, datatype: str, idx: int):
+async def get_index_data(input_dir: str, datatype: str, idx: int) -> pd.Series:
     document_df = pd.read_parquet(f"{input_dir}/{consts.DOCUMENT_TABLE}.parquet")
     entity_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_TABLE}.parquet")
     text_unit_df = pd.read_parquet(f"{input_dir}/{consts.TEXT_UNIT_TABLE}.parquet")
     entity_embedding_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_EMBEDDING_TABLE}.parquet")
     relationship_df = pd.read_parquet(f"{input_dir}/{consts.RELATIONSHIP_TABLE}.parquet")
+    community_df = pd.read_parquet(f"{input_dir}/{consts.COMMUNITY_TABLE}.parquet")
     report_df = pd.read_parquet(f"{input_dir}/{consts.COMMUNITY_REPORT_TABLE}.parquet")
     if datatype == "documents":
         return await get_doc(document_df, idx)
@@ -28,9 +29,9 @@ async def get_index_data(input_dir: str, datatype: str, idx: int):
     elif datatype == "sources":
         return await get_source(document_df, text_unit_df, entity_embedding_df, relationship_df, idx)
     elif datatype == "reports":
-        return await get_report(input_dir, idx)
+        return await get_report(document_df, text_unit_df, relationship_df, community_df, report_df, idx)
     elif datatype == "relationships":
-        return await get_relationship(relationship_df, idx)
+        return await get_relationship(document_df, text_unit_df, entity_embedding_df, relationship_df, idx)
     else:
         raise ValueError(f"Unknown datatype: {datatype}")
 
@@ -88,22 +89,31 @@ async def get_entity(
         if not entity["sources"].get(title):
             entity["sources"][title] = []
         entity["sources"][title].append(text_unit.index[0])
-    print(entity)
+    for source_list in entity["sources"].values():
+        source_list.sort()
     return entity
 
 
-async def get_claim(input_dir: str, row_id: Optional[int] = None) -> Covariate:
+# async def get_claim(input_dir: str, row_id: Optional[int] = None) -> Covariate:
+#     covariate_file = f"{input_dir}/{consts.COVARIATE_TABLE}.parquet"
+#     if os.path.exists(covariate_file):
+#         covariate_df = pd.read_parquet(covariate_file)
+#         claims = read_indexer_covariates(covariate_df)
+#     else:
+#         raise ValueError(f"No claims {input_dir} of id {row_id} found")
+#     # TODO optimize performance using like database or dict in memory
+#     for claim in claims:
+#         if int(claim.short_id) == row_id:
+#             return claim
+#     raise ValueError(f"Not Found claim id {row_id}")
+
+
+async def get_claim(input_dir: str, row_id: Optional[int] = None) -> pd.Series:
     covariate_file = f"{input_dir}/{consts.COVARIATE_TABLE}.parquet"
     if os.path.exists(covariate_file):
         covariate_df = pd.read_parquet(covariate_file)
-        claims = read_indexer_covariates(covariate_df)
-    else:
-        raise ValueError(f"No claims {input_dir} of id {row_id} found")
-    # TODO optimize performance using like database or dict in memory
-    for claim in claims:
-        if int(claim.short_id) == row_id:
-            return claim
-    raise ValueError(f"Not Found claim id {row_id}")
+        return covariate_df[covariate_df["human_readable_id"] == str(row_id)].iloc[0]
+    raise ValueError(f"No claims {input_dir} of id {row_id} found")
 
 
 # async def get_source(input_dir: str, row_id: Optional[int] = None) -> TextUnit:
@@ -121,7 +131,7 @@ async def get_source(
     text_unit_df: pd.DataFrame,
     entity_embedding_df: pd.DataFrame,
     relationship_df: pd.DataFrame,
-    row_id: int | None = None
+    row_id: int
 ) -> pd.Series:
     text_unit = text_unit_df.rename(
         columns={
@@ -137,21 +147,56 @@ async def get_source(
     for i, id in enumerate(text_unit["entities"]):
         entity = entity_embedding_df[entity_embedding_df["id"] == id].iloc[0]
         text_unit["entities"][i] = (entity["human_readable_id"], entity["name"])
+    text_unit["entities"].sort()
     for i, id in enumerate(text_unit["relationships"]):
         relationship = relationship_df[relationship_df["id"] == id].iloc[0]
-        text_unit["relationships"][i] = (relationship["human_readable_id"], f"{relationship["source"]} -> {relationship["target"]}")
+        text_unit["relationships"][i] = (int(relationship["human_readable_id"]), f"{relationship["source"]} → {relationship["target"]}")
+    text_unit["relationships"].sort()
     return text_unit
 
 
-async def get_report(input_dir: str, row_id: Optional[int] = None) -> CommunityReport:
-    entity_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_TABLE}.parquet")
-    report_df = pd.read_parquet(f"{input_dir}/{consts.COMMUNITY_REPORT_TABLE}.parquet")
-    reports = read_indexer_reports(report_df, entity_df, consts.COMMUNITY_LEVEL)
-    # TODO optimize performance using like database or dict in memory
-    for report in reports:
-        if int(report.short_id) == row_id:
-            return report
-    raise ValueError(f"Not Found report id {row_id}")
+# async def get_report(input_dir: str, row_id: Optional[int] = None) -> CommunityReport:
+#     entity_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_TABLE}.parquet")
+#     report_df = pd.read_parquet(f"{input_dir}/{consts.COMMUNITY_REPORT_TABLE}.parquet")
+#     reports = read_indexer_reports(report_df, entity_df, consts.COMMUNITY_LEVEL)
+#     # TODO optimize performance using like database or dict in memory
+#     for report in reports:
+#         if int(report.short_id) == row_id:
+#             return report
+#     raise ValueError(f"Not Found report id {row_id}")
+
+
+async def get_report(
+    document_df: pd.DataFrame,
+    text_unit_df: pd.DataFrame,
+    relationship_df: pd.DataFrame,
+    community_df: pd.DataFrame,
+    report_df: pd.DataFrame,
+    row_id: int
+) -> pd.Series:
+    report_df = report_df.merge(
+        community_df.rename(columns={"id": "community"})[["community", "relationship_ids", "text_unit_ids"]],
+        on="community",
+        how="inner"
+    ).rename(columns={"relationship_ids": "relationships"})
+    report = report_df[report_df["community"].astype(int) == row_id].iloc[0]
+    for i, relationship_id in enumerate(report["relationships"]):
+        relationship = relationship_df[relationship_df["id"] == relationship_id].iloc[0]
+        report["relationships"][i] = (int(relationship["human_readable_id"]), f"{relationship['source']} → {relationship['target']}")
+    report["relationships"].sort()
+    print(type(report["relationships"]))
+    report["sources"] = {}
+    for source_id in report["text_unit_ids"][0].split(","):
+        text_unit = text_unit_df[text_unit_df["id"] == source_id]
+        title = document_df[
+            document_df["id"] == text_unit["document_ids"].iloc[0][0]
+        ].iloc[0]["title"]
+        if not report["sources"].get(title):
+            report["sources"][title] = []
+        report["sources"][title].append(text_unit.index[0])
+    for source_list in report["sources"].values():
+        source_list.sort()
+    return report
 
 
 # async def get_relationship(input_dir: str, row_id: Optional[int] = None) -> Relationship:
@@ -165,8 +210,33 @@ async def get_report(input_dir: str, row_id: Optional[int] = None) -> CommunityR
 
 
 async def get_relationship(
+    document_df: pd.DataFrame,
+    text_unit_df: pd.DataFrame,
+    entity_embedding_df: pd.DataFrame,
     relationship_df: pd.DataFrame,
-    row_id: int | None = None
+    row_id: int
 ) -> pd.Series:
     relationship = relationship_df[relationship_df["human_readable_id"] == str(row_id)].iloc[0]
+    relationship["source"] = (
+        entity_embedding_df[
+            entity_embedding_df["name"] == relationship["source"]
+        ].iloc[0]["human_readable_id"],
+        relationship["source"]
+    )
+    relationship["target"] = (
+        entity_embedding_df[
+            entity_embedding_df["name"] == relationship["target"]
+        ].iloc[0]["human_readable_id"],
+        relationship["target"]
+    )
+    relationship["sources"] = {}
+    for source_id in relationship["text_unit_ids"]:
+        text_unit = text_unit_df[text_unit_df["id"] == source_id]
+        title = document_df[
+            document_df["id"] == text_unit["document_ids"].iloc[0][0]
+        ].iloc[0]["title"]
+        if not relationship["sources"].get(title):
+            relationship["sources"][title] = []
+        relationship["sources"][title].append(text_unit.index[0])
+        relationship["sources"][title].sort()
     return relationship

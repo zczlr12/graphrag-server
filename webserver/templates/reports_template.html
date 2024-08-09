@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Community Report Information</title>
+    <title>社区报告{{ idx }}：{{ data["title"] }}</title>
     <style>
         table {
             margin: auto;
@@ -22,17 +22,16 @@
     </style>
 </head>
 <body>
-    <h1 style="text-align: center;">Community Report Information</h1>
+    <h1 style="text-align: center;">社区报告{{ data["community"] }}：{{ data["title"] }}</h1>
     <table>
-        <tr><th>Attribute</th><th>Value</th></tr>
-        <tr><td>Name</td><td>{{ data.title }}</td></tr>
-        <tr><td>Community ID</td><td>{{ data.community_id }}</td></tr>
-        <tr><td>Summary</td><td>{{ data.summary }}</td></tr>
-        <tr><td>Full Content</td><td>{{ data.full_content }}</td></tr>
-        <tr><td>Rank</td><td>{{ data.rank }}</td></tr>
-        <tr><td>Summary Embedding</td><td>{{ data.summary_embedding }}</td></tr>
-        <tr><td>Full Content Embedding</td><td>{{ data.full_content_embedding }}</td></tr>
-        <tr><td>Attributes</td><td>{{ data.attributes }}</td></tr>
+        <tr><th>属性</th><th>值</th></tr>
+        <tr><td>标题</td><td>{{ data["title"] }}</td></tr>
+        <tr><td>所在层级</td><td>{{ data["level"] }}</td></tr>
+        <tr><td>总结</td><td>{{ data["summary"] }}</td></tr>
+        <tr><td>具体内容</td><td>{{ data["full_content"] }}</td></tr>
+        <tr><td>重要性指数（结果排序用）</td><td>{{ data["rank"] }}</td></tr>
+        <tr><td>所含关系</td><td>{% for i, relationship in data.relationships %}<div>{{ i }}：<a href="/v1/references/{{ index_id }}/relationships/{{ i }}">{{ relationship }}</a></div>{% endfor %}</td></tr>
+        <tr><td>所含文本块</td><td>{% for doc in data["sources"] %}<div>{{ doc }}：{% for i in data["sources"][doc] %}<a href="/v1/references/{{ index_id }}/sources/{{ i }}">{{ i }}</a> {% endfor %}</div>{% endfor %}</td></tr>
     </table>
 </body>
 </html>

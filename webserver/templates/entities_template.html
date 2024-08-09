@@ -31,9 +31,9 @@
         <tr><td>描述</td><td>{{ data.description }}</td></tr>
         <tr><td>所在文本块</td><td>{% for doc in data.sources %}<div>{{ doc }}：{% for i in data.sources[doc] %}<a href="/v1/references/{{ index_id }}/sources/{{ i }}">{{ i }}</a> {% endfor %}</div>{% endfor %}</td></tr>
         <tr><td>所在社区</td><td>{% for level, com in data.communities.items() %}<div>{{ level }}级：{% if com %}<a href="/v1/references/{{ index_id }}/reports/{{ com[0] }}">{{ com[1] }}</a>{% else %}无{% endif %}</div>{% endfor %}</td></tr>
-        <tr><td>重要性指数（节点的度数）</td><td>{{ data.degree }}</td></tr>
+        <tr><td>重要性指数（结点的度数）</td><td>{{ data.degree }}</td></tr>
         <tr><td>描述Embedding</td><td>{{ data.description_embedding }}</td></tr>
-        <tr><td>图Embedding</td><td>{{ data.graph_embedding }}</td></tr>
+        <tr><td>图Embedding</td><td>{% if data.graph_embedding %}{{ data.graph_embedding }}{% else %}无{% endif %}</td></tr>
         <tr><td>x</td><td>{{ data.x }}</td></tr>
         <tr><td>y</td><td>{{ data.y }}</td></tr>
     </table>

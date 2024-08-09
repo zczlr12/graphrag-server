@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Relationship Information</title>
+    <title>关系{{ idx }}：{{ data["source"][1] }} → {{ data["target"][1] }}</title>
     <style>
         table {
             margin: auto;
@@ -22,17 +22,18 @@
     </style>
 </head>
 <body>
-    <h1 style="text-align: center;">Relationship Information</h1>
+    <h1 style="text-align: center;">关系{{ data["human_readable_id"] }}：{{ data["source"][1] }} → {{ data["target"][1] }}</h1>
     <table>
-        <tr><th>Attribute</th><th>Value</th></tr>
-        <tr><td>Source</td><td>{{ data.source }}</td></tr>
-        <tr><td>Target</td><td>{{ data.target }}</td></tr>
-        <tr><td>Weight</td><td>{{ data.weight }}</td></tr>
-        <tr><td>Description</td><td>{{ data.description }}</td></tr>
-        <tr><td>Description Embedding</td><td>{{ data.description_embedding }}</td></tr>
-        <tr><td>Text Unit IDs</td><td>{{ data.text_unit_ids }}</td></tr>
-        <tr><td>Document IDs</td><td>{{ data.document_ids }}</td></tr>
-        <tr><td>Attributes</td><td>{{ data.attributes }}</td></tr>
+        <tr><th>属性</th><th>值</th></tr>
+        <tr><td>ID</td><td>{{ data.id }}</td></tr>
+        <tr><td>起点实体</td><td><a href="/v1/references/{{ index_id }}/entities/{{ data["source"][0] }}">{{ data["source"][1] }}</a></td></tr>
+        <tr><td>终点实体</td><td><a href="/v1/references/{{ index_id }}/entities/{{ data["target"][0] }}">{{ data["target"][1] }}</a></td></tr>
+        <tr><td>重数</td><td>{{ data["weight"] }}</td></tr>
+        <tr><td>描述</td><td>{{ data["description"] }}</td></tr>
+        <tr><td>所在文本块</td><td>{% for doc in data["sources"] %}<div>{{ doc }}：{% for i in data["sources"][doc] %}<a href="/v1/references/{{ index_id }}/sources/{{ i }}">{{ i }}</a> {% endfor %}</div>{% endfor %}</td></tr>
+        <tr><td>起点度数</td><td>{{ data["source_degree"] }}</td></tr>
+        <tr><td>终点度数</td><td>{{ data["target_degree"] }}</td></tr>
+        <tr><td>重要性指数（起点和终点的度数之和）</td><td>{{ data["rank"] }}</td></tr>
     </table>
 </body>
 </html>
