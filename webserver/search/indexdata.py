@@ -150,7 +150,7 @@ async def get_source(
     text_unit["entities"].sort()
     for i, id in enumerate(text_unit["relationships"]):
         relationship = relationship_df[relationship_df["id"] == id].iloc[0]
-        text_unit["relationships"][i] = (int(relationship["human_readable_id"]), f"{relationship["source"]} → {relationship["target"]}")
+        text_unit["relationships"][i] = (int(relationship["human_readable_id"]), f"{relationship['source']} → {relationship['target']}")
     text_unit["relationships"].sort()
     return text_unit
 
