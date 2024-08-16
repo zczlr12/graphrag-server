@@ -30,13 +30,17 @@ from webserver.utils import consts
 logger = logging.getLogger(__name__)
 
 
-async def load_local_context(input_dir: str, embedder: BaseTextEmbedding,
-                             token_encoder: tiktoken.Encoding | None = None) -> LocalContextBuilder:
+async def load_local_context(
+    input_dir: str,
+    embedder: BaseTextEmbedding,
+    token_encoder: tiktoken.Encoding | None = None,
+    community_level: int = 2,
+) -> LocalContextBuilder:
     # read nodes table to get community and degree data
     entity_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_TABLE}.parquet")
     entity_embedding_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_EMBEDDING_TABLE}.parquet")
 
-    entities = read_indexer_entities(entity_df, entity_embedding_df, consts.COMMUNITY_LEVEL)
+    entities = read_indexer_entities(entity_df, entity_embedding_df, community_level)
 
     vector_store_args = (
         settings.embeddings.vector_store if settings.embeddings.vector_store else {}
@@ -63,7 +67,7 @@ async def load_local_context(input_dir: str, embedder: BaseTextEmbedding,
         covariates = None
 
     report_df = pd.read_parquet(f"{input_dir}/{consts.COMMUNITY_REPORT_TABLE}.parquet")
-    reports = read_indexer_reports(report_df, entity_df, consts.COMMUNITY_LEVEL)
+    reports = read_indexer_reports(report_df, entity_df, community_level)
 
     text_unit_df = pd.read_parquet(f"{input_dir}/{consts.TEXT_UNIT_TABLE}.parquet")
     text_units = read_indexer_text_units(text_unit_df)

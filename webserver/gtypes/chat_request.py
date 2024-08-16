@@ -42,6 +42,7 @@ class CompletionCreateParamsBase(BaseModel):
     top_logprobs: Optional[int] = None
     top_p: Optional[float] = 1.0
     user: Optional[str] = None
+    community_level: Optional[int] = 2
 
     def llm_chat_params(self) -> dict[str, Any]:
         return {
@@ -56,6 +57,7 @@ class ChatQuestionGen(BaseModel):
     max_tokens: Optional[int] = None
     temperature: Optional[float] = 0.0
     n: Optional[int] = None
+    community_level: Optional[int] = 2
 
 
 class Model(BaseModel):

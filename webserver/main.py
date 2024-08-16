@@ -179,8 +179,13 @@ async def generate_chunks(callback, request_model, future: gtypes.TypedFuture[Se
     yield f"data: [DONE]\n\n"
 
 
-async def initialize_search(request: gtypes.ChatCompletionRequest, search: BaseSearch, context: str = None):
-    search.context_builder = await switch_context(model=context)
+async def initialize_search(
+    request: gtypes.ChatCompletionRequest,
+    search: BaseSearch,
+    context: str = None,
+    community_level: int = 2
+) -> BaseSearch:
+    search.context_builder = await switch_context(context, community_level)
     search.llm_params.update(request.llm_chat_params())
     return search
 
@@ -243,9 +248,9 @@ async def chat_completions(request: gtypes.ChatCompletionRequest):
         conversation_history = ConversationHistory.from_list([message.dict() for message in history])
 
         if request.model.endswith("global"):
-            search = await initialize_search(request, global_search, request.model)
+            search = await initialize_search(request, global_search, request.model, request.community_level)
         else:
-            search = await initialize_search(request, local_search, request.model)
+            search = await initialize_search(request, local_search, request.model, request.community_level)
             if request.max_tokens:
                 search.context_builder_params['max_tokens'] = request.max_tokens
 
@@ -262,7 +267,7 @@ async def get_advice_question(request: gtypes.ChatQuestionGen):
     request.model = get_latest_model(request.model)
 
     if request.model.endswith("local"):
-        local_context = await switch_context(model=request.model)
+        local_context = await switch_context(request.model, request.community_level)
         question_gen.context_builder = local_context
     else:
         raise NotImplementedError(f"model {request.model} is not supported")
@@ -310,13 +315,13 @@ async def get_reference(index_id: str, datatype: str, idx: int):
     return HTMLResponse(content=html_content)
 
 
-async def switch_context(model: str):
+async def switch_context(model: str, community_level: int = 2):
     if model.endswith("global"):
         input_dir = os.path.join(settings.data, model.removesuffix("-global"), "artifacts")
-        context_builder = await search.load_global_context(input_dir, token_encoder)
+        context_builder = await search.load_global_context(input_dir, token_encoder, community_level)
     elif model.endswith("local"):
         input_dir = os.path.join(settings.data, model.removesuffix("-local"), "artifacts")
-        context_builder = await search.load_local_context(input_dir, text_embedder, token_encoder)
+        context_builder = await search.load_local_context(input_dir, text_embedder, token_encoder, community_level)
     else:
         raise NotImplementedError(f"model {model} is not supported")
     return context_builder

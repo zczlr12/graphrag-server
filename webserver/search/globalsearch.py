@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import tiktoken
 
@@ -14,14 +15,17 @@ from webserver.configs import settings
 from webserver.utils import consts
 
 
-async def load_global_context(input_dir: str,
-                              token_encoder: tiktoken.Encoding | None = None) -> GlobalContextBuilder:
+async def load_global_context(
+    input_dir: str,
+    token_encoder: tiktoken.Encoding | None = None,
+    community_level: int = 2,
+) -> GlobalContextBuilder:
     final_nodes = pd.read_parquet(f"{input_dir}/{consts.ENTITY_TABLE}.parquet")
     final_community_reports = pd.read_parquet(f"{input_dir}/{consts.COMMUNITY_REPORT_TABLE}.parquet")
     final_entities = pd.read_parquet(f"{input_dir}/{consts.ENTITY_EMBEDDING_TABLE}.parquet")
 
-    reports = read_indexer_reports(final_community_reports, final_nodes, consts.COMMUNITY_LEVEL)
-    entities = read_indexer_entities(final_nodes, final_entities, consts.COMMUNITY_LEVEL)
+    reports = read_indexer_reports(final_community_reports, final_nodes, community_level)
+    entities = read_indexer_entities(final_nodes, final_entities, community_level)
 
     context_builder = GlobalCommunityContext(
         community_reports=reports,
