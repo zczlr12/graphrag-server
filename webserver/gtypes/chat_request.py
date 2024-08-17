@@ -43,6 +43,7 @@ class CompletionCreateParamsBase(BaseModel):
     top_p: Optional[float] = 1.0
     user: Optional[str] = None
     community_level: Optional[int] = 2
+    response_type: Optional[str] = None
 
     def llm_chat_params(self) -> dict[str, Any]:
         return {

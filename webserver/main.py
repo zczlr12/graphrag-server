@@ -181,11 +181,13 @@ async def generate_chunks(callback, request_model, future: gtypes.TypedFuture[Se
 
 async def initialize_search(
     request: gtypes.ChatCompletionRequest,
-    search: BaseSearch,
+    search: LocalSearch | GlobalSearch,
     context: str = None,
     community_level: int = 2
-) -> BaseSearch:
+) -> LocalSearch | GlobalSearch:
     search.context_builder = await switch_context(context, community_level)
+    if request.response_type:
+        search.response_type = request.response_type
     search.llm_params.update(request.llm_chat_params())
     return search
 
