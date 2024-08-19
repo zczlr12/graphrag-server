@@ -3,7 +3,7 @@
 ## 新内容
 
 - 优化索引内容
-- 调整query prompts
+- 添加支持更多参数调整的Gradio界面
 
 ## 原作者内容
 - 我添加了Web服务器，以支持真即时流式输出。
@@ -37,7 +37,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 - 安装依赖 Install dependencies
 ```
 poetry install
-pip install -r webserver/requirements.txt
+pip install -r requirements.txt
 ```
 - 初始化GraphRAG Initialize GraphRAG
 ```

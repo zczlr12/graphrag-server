@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from jinja2 import Template
 from openai.types import CompletionUsage
 from openai.types.chat import ChatCompletion, ChatCompletionMessage, ChatCompletionChunk
@@ -29,6 +30,13 @@ from webserver.configs import settings
 from webserver.utils import consts
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.mount("/static", StaticFiles(directory="webserver/static"), name="static")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -246,8 +254,10 @@ async def chat_completions(request: gtypes.ChatCompletionRequest):
     request.model = get_latest_model(request.model)
 
     try:
-        history = request.messages[:-1]
-        conversation_history = ConversationHistory.from_list([message.dict() for message in history])
+        conversation_history = None
+        if len(request.messages) > 1:
+            history = request.messages[:-1]
+            conversation_history = ConversationHistory.from_list([message.dict() for message in history])
 
         if request.model.endswith("global"):
             search = await initialize_search(request, global_search, request.model, request.community_level)
