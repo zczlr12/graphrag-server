@@ -156,14 +156,14 @@ async def generate_chunks(callback, request_model, future: gtypes.TypedFuture[Se
                     )
                 ]
             )
-            yield f"data: {chunk.json()}\n\n"
+            yield chunk.json()
 
     result: SearchResult = future.result()
     content = ""
     reference = utils.get_reference(result.response)
     if reference:
         index_id = request_model.removesuffix("-global").removesuffix("-local")
-        content = f"\n{utils.generate_ref_links(reference, index_id)}"
+        content = f"\n\n---\n### 来源\n{utils.generate_ref_links(reference, index_id)}"
     finish_reason = "stop"
     chunk = ChatCompletionChunk(
         id=f"chatcmpl-{uuid.uuid4().hex}",
@@ -183,8 +183,7 @@ async def generate_chunks(callback, request_model, future: gtypes.TypedFuture[Se
         ],
         usage=usage
     )
-    yield f"data: {chunk.json()}\n\n"
-    yield f"data: [DONE]\n\n"
+    yield chunk.json()
 
 
 async def initialize_search(
@@ -206,7 +205,7 @@ async def handle_sync_response(request, search, conversation_history):
     reference = utils.get_reference(response)
     if reference:
         index_id = request.model.removesuffix("-global").removesuffix("-local")
-        response += f"\n{utils.generate_ref_links(reference, index_id)}"
+        response += f"\n\n---\n### 来源\n{utils.generate_ref_links(reference, index_id)}"
     from openai.types.chat.chat_completion import Choice
     completion = ChatCompletion(
         id=f"chatcmpl-{uuid.uuid4().hex}",

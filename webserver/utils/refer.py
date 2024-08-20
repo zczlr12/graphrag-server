@@ -24,5 +24,5 @@ def generate_ref_links(data: Dict[str, Set[int]], index_id: str) -> str:
     lines = []
     for key, values in data.items():
         for value in values:
-            lines.append(f'[^Data:{key.capitalize()}({value})]: [{key.capitalize()}: {value}]({base_url}/{index_id}/{key}/{value})')
+            lines.append(f'[{key.capitalize()}: {value}]({base_url}/{index_id}/{key}/{value})')
     return "\n".join(lines)
