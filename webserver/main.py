@@ -23,6 +23,7 @@ from graphrag.query.structured_search.base import SearchResult, BaseSearch
 from graphrag.query.structured_search.global_search.callbacks import GlobalSearchLLMCallback
 from graphrag.query.structured_search.global_search.search import GlobalSearch
 from graphrag.query.structured_search.local_search.search import LocalSearch
+from graphrag.query.structured_search.direct.search import Direct
 from webserver import gtypes
 from webserver import search
 from webserver import utils
@@ -74,6 +75,7 @@ token_encoder = tiktoken.get_encoding("cl100k_base")
 
 local_search: LocalSearch
 global_search: GlobalSearch
+direct: Direct
 question_gen: LocalQuestionGen
 
 
@@ -119,9 +121,11 @@ class CustomSearchCallback(GlobalSearchLLMCallback):
 async def startup_event():
     global local_search
     global global_search
+    global direct
     global question_gen
     local_search = await search.build_local_search_engine(llm, token_encoder=token_encoder)
     global_search = await search.build_global_search_engine(llm, token_encoder=token_encoder)
+    direct = await search.build_direct_engine(llm, token_encoder=token_encoder)
     question_gen = await search.build_local_question_gen(llm, token_encoder=token_encoder)
 
 
@@ -246,7 +250,7 @@ async def handle_stream_response(request, search, conversation_history):
 
 @app.post("/v1/chat/completions")
 async def chat_completions(request: gtypes.ChatCompletionRequest):
-    if not local_search or not global_search:
+    if not local_search or not global_search or not direct:
         logger.error("graphrag search engines is not initialized")
         raise HTTPException(status_code=500, detail="graphrag search engines is not initialized")
 
@@ -258,12 +262,13 @@ async def chat_completions(request: gtypes.ChatCompletionRequest):
             history = request.messages[:-1]
             conversation_history = ConversationHistory.from_list([message.dict() for message in history])
 
-        if request.model.endswith("global"):
+        if request.model.endswith("local"):
+            search = await initialize_search(request, local_search, request.model, request.community_level)
+        elif request.model.endswith("global"):
             search = await initialize_search(request, global_search, request.model, request.community_level)
         else:
-            search = await initialize_search(request, local_search, request.model, request.community_level)
-            if request.max_tokens:
-                search.context_builder_params['max_tokens'] = request.max_tokens
+            direct.llm_params.update(request.llm_chat_params())
+            search = direct
 
         if not request.stream:
             return await handle_sync_response(request, search, conversation_history)

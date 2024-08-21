@@ -39,7 +39,7 @@ class BaseSearch(ABC):
     def __init__(
         self,
         llm: BaseLLM,
-        context_builder: GlobalContextBuilder | LocalContextBuilder,
+        context_builder: GlobalContextBuilder | LocalContextBuilder | None = None,
         token_encoder: tiktoken.Encoding | None = None,
         llm_params: dict[str, Any] | None = None,
         context_builder_params: dict[str, Any] | None = None,

@@ -16,7 +16,7 @@ def send_message(temperature, timestamp, index, community_level, response_type, 
         messages = [
             {
                 "role": "system",
-                "content": "你将会学习核电厂经验反馈，工作负责人会对你进行提问，你需要给出针对性建议。"
+                "content": "你叫电厂百晓生，你将会学习核电厂经验反馈，工作负责人会对你进行提问，你需要给出针对性建议。"
             }
         ]
         for human, assistant in history:
@@ -50,7 +50,7 @@ def send_message(temperature, timestamp, index, community_level, response_type, 
 
 
 def create_interface():
-    with gr.Blocks(title="电厂百晓生", fill_height=True, fill_width=True) as demo:
+    with gr.Blocks(gr.themes.Base(), title="电厂百晓生", fill_height=True, fill_width=True) as demo:
         gr.Markdown("# <center>电厂百晓生</center>")
         with gr.Row():
             with gr.Column():
@@ -62,13 +62,13 @@ def create_interface():
                 response_type = gr.Textbox(label="响应类型", placeholder="例如：“一句话”、“几个要点”、“多页报告”等")
                 stream = gr.Checkbox(True, label="流式输出")
             with gr.Column(scale=2):
-                chatbot = gr.Chatbot(label="对话框", placeholder="请在下方输入问题")
+                chatbot = gr.Chatbot(label="对话框", layout="panel", placeholder="请在下方输入问题")
                 query_input = gr.Textbox(placeholder="输入问题", label="输入框", show_copy_button=True)
                 with gr.Row():
                     with gr.Column():
-                        query_btn = gr.Button("发送")
+                        query_btn = gr.Button("发送", variant="primary")
                     with gr.Column():
-                        gr.ClearButton(chatbot, value="清空聊天记录", variant="primary")
+                        gr.ClearButton(chatbot, value="清空聊天记录")
         
         query_input.submit(
             lambda x, y: ("", [*y, [x, None]]),
