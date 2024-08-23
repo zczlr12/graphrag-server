@@ -3,13 +3,12 @@ import logging
 import os
 import time
 import uuid
-from typing import Generator, Optional
+from typing import Generator
 
 import tiktoken
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from jinja2 import Template
 from openai.types import CompletionUsage
@@ -19,7 +18,7 @@ from openai.types.chat.chat_completion_chunk import Choice, ChoiceDelta
 from graphrag.query.context_builder.conversation_history import ConversationHistory
 from graphrag.query.llm.oai import ChatOpenAI, OpenAIEmbedding
 from graphrag.query.question_gen.local_gen import LocalQuestionGen
-from graphrag.query.structured_search.base import SearchResult, BaseSearch
+from graphrag.query.structured_search.base import SearchResult
 from graphrag.query.structured_search.global_search.callbacks import GlobalSearchLLMCallback
 from graphrag.query.structured_search.global_search.search import GlobalSearch
 from graphrag.query.structured_search.local_search.search import LocalSearch
@@ -38,7 +37,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.mount("/static", StaticFiles(directory="webserver/static"), name="static")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -129,14 +127,6 @@ async def startup_event():
     question_gen = await search.build_local_question_gen(llm, token_encoder=token_encoder)
 
 
-@app.get("/")
-async def index():
-    html_file_path = os.path.join("webserver", "templates", "index.html")
-    with open(html_file_path, "r", encoding="utf-8") as file:
-        html_content = file.read()
-    return HTMLResponse(content=html_content)
-
-
 async def generate_chunks(callback, request_model, future: gtypes.TypedFuture[SearchResult]):
     usage = None
     while not future.done():
@@ -167,7 +157,7 @@ async def generate_chunks(callback, request_model, future: gtypes.TypedFuture[Se
     reference = utils.get_reference(result.response)
     if reference:
         index_id = request_model.removesuffix("-global").removesuffix("-local")
-        content = f"\n\n---\n### 来源\n{utils.generate_ref_links(reference, index_id)}"
+        content = f"\n### 来源\n{utils.generate_ref_links(reference, index_id)}"
     finish_reason = "stop"
     chunk = ChatCompletionChunk(
         id=f"chatcmpl-{uuid.uuid4().hex}",
@@ -209,7 +199,7 @@ async def handle_sync_response(request, search, conversation_history):
     reference = utils.get_reference(response)
     if reference:
         index_id = request.model.removesuffix("-global").removesuffix("-local")
-        response += f"\n\n---\n### 来源\n{utils.generate_ref_links(reference, index_id)}"
+        response += f"\n### 来源\n{utils.generate_ref_links(reference, index_id)}"
     from openai.types.chat.chat_completion import Choice
     completion = ChatCompletion(
         id=f"chatcmpl-{uuid.uuid4().hex}",
@@ -298,20 +288,6 @@ async def get_advice_question(request: gtypes.ChatQuestionGen):
                                     llm_calls=candidate_questions.llm_calls,
                                     prompt_tokens=candidate_questions.prompt_tokens)
     return resp
-
-
-@app.get("/v1/models", response_model=gtypes.ModelList)
-async def list_models():
-    dirs = utils.get_sorted_subdirs(settings.data)
-    models: list[gtypes.Model] = [
-        gtypes.Model(id=consts.LATEST_MODEL_LOCAL, object="model", created=1644752340, owned_by="graphrag"),
-        gtypes.Model(id=consts.LATEST_MODEL_GLOBAL, object="model", created=1644752340, owned_by="graphrag")]
-    for dir in dirs:
-        models.append(gtypes.Model(id=f"{dir}-local", object="model", created=1644752340, owned_by="graphrag"))
-        models.append(gtypes.Model(id=f"{dir}-global", object="model", created=1644752340, owned_by="graphrag"))
-
-    response = gtypes.ModelList(data=models)
-    return response
 
 
 @app.get("/v1/references/{index_id}/{datatype}/{idx}", response_class=HTMLResponse)
