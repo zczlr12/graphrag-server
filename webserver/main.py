@@ -9,6 +9,10 @@ import tiktoken
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse
+<<<<<<< HEAD
+=======
+from fastapi.staticfiles import StaticFiles
+>>>>>>> 94937db579b39c0907fc71263fbaf604a9b8ce4b
 from fastapi.middleware.cors import CORSMiddleware
 from jinja2 import Template
 from openai.types import CompletionUsage
@@ -37,6 +41,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+<<<<<<< HEAD
+=======
+app.mount("/static", StaticFiles(directory="webserver/static"), name="static")
+>>>>>>> 94937db579b39c0907fc71263fbaf604a9b8ce4b
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
