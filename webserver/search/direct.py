@@ -1,4 +1,5 @@
 import tiktoken
+
 from graphrag.query.llm.base import BaseLLM
 from graphrag.query.structured_search.direct.search import Direct
 from webserver.configs import settings

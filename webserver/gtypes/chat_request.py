@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List, Union, Literal, Any
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -22,28 +22,28 @@ class ChatCompletionToolParam(BaseModel):
 
 
 class CompletionCreateParamsBase(BaseModel):
-    messages: List[ChatCompletionMessageParam]
+    messages: list[ChatCompletionMessageParam]
     model: str
-    frequency_penalty: Optional[float] = None
-    logit_bias: Optional[Dict[str, int]] = None
-    logprobs: Optional[bool] = None
-    max_tokens: Optional[int] = None
-    n: Optional[int] = None
+    frequency_penalty: float | None = None
+    logit_bias: dict[str, int] | None = None
+    logprobs: bool | None = None
+    max_tokens: int | None = None
+    n: int | None = None
     parallel_tool_calls: bool = False
-    presence_penalty: Optional[float] = None
+    presence_penalty: float | None = None
     response_format: ResponseFormat = ResponseFormat(type="text")
-    seed: Optional[int] = None
-    service_tier: Optional[Literal["auto", "default"]] = None
-    stop: Optional[Union[str, List[str]]] = None
-    stream: Optional[bool] = False
-    stream_options: Optional[Dict] = None
-    temperature: Optional[float] = 0.0
-    tools: List[ChatCompletionToolParam] = None
-    top_logprobs: Optional[int] = None
-    top_p: Optional[float] = 1.0
-    user: Optional[str] = None
-    community_level: Optional[int] = 2
-    response_type: Optional[str] = None
+    seed: int | None = None
+    service_tier: Literal["auto", "default"] | None = None
+    stop: str | list[str] | None = None
+    stream: bool = False
+    stream_options: dict | None = None
+    temperature: float | None = 0.0
+    tools: list[ChatCompletionToolParam] = None
+    top_logprobs: int | None = None
+    top_p: float | None = 1.0
+    user: str | None = None
+    community_level: int | None = 2
+    response_type: str | None = None
 
     def llm_chat_params(self) -> dict[str, Any]:
         return {
@@ -53,12 +53,12 @@ class CompletionCreateParamsBase(BaseModel):
 
 
 class ChatQuestionGen(BaseModel):
-    messages: List[ChatCompletionMessageParam]
+    messages: list[ChatCompletionMessageParam]
     model: str
-    max_tokens: Optional[int] = None
-    temperature: Optional[float] = 0.0
-    n: Optional[int] = None
-    community_level: Optional[int] = 2
+    max_tokens: int | None = None
+    temperature: float | None = 0.0
+    n: int | None = None
+    community_level: int | None = 2
 
 
 class Model(BaseModel):
@@ -70,4 +70,4 @@ class Model(BaseModel):
 
 class ModelList(BaseModel):
     object: Literal["list"] = "list"
-    data: List[Model]
+    data: list[Model]

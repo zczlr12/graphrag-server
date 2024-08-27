@@ -1,35 +1,34 @@
+"""Fast API接口."""
 import asyncio
 import logging
 import os
-import time
 import re
-from typing import List, Tuple
+import time
 import uuid
-from typing import Generator
+from collections.abc import Generator
 
 import tiktoken
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from jinja2 import Template
 from openai.types import CompletionUsage
-from openai.types.chat import ChatCompletion, ChatCompletionMessage, ChatCompletionChunk
+from openai.types.chat import ChatCompletion, ChatCompletionChunk, ChatCompletionMessage
 from openai.types.chat.chat_completion_chunk import Choice, ChoiceDelta
 
 from graphrag.query.context_builder.conversation_history import ConversationHistory
 from graphrag.query.llm.oai import ChatOpenAI, OpenAIEmbedding
 from graphrag.query.question_gen.local_gen import LocalQuestionGen
 from graphrag.query.structured_search.base import SearchResult
-from graphrag.query.structured_search.global_search.callbacks import GlobalSearchLLMCallback
+from graphrag.query.structured_search.direct.search import Direct
+from graphrag.query.structured_search.global_search.callbacks import (
+    GlobalSearchLLMCallback,
+)
 from graphrag.query.structured_search.global_search.search import GlobalSearch
 from graphrag.query.structured_search.local_search.search import LocalSearch
-from graphrag.query.structured_search.direct.search import Direct
-from webserver import gtypes
-from webserver import search
-from webserver import utils
+from webserver import const, gtypes, search
 from webserver.configs import settings
-from webserver.utils import consts
 
 app = FastAPI()
 app.add_middleware(
@@ -147,10 +146,10 @@ async def generate_ref_links(response: str, model: str) -> str:
                         url = f"{base_url}/{index_id}/{key.lower()}/{id}"
                         data = await search.get_index_data(input_dir, key.lower(), int(id))
                         reference[source].append(f"<sup>[{i}]({url})</sup>")
-                        lines.append(f"{i}. [{consts.KEYS[key]}{id}：{data["title"]}]({url})")
+                        lines.append(f"{i}. [{const.KEYS[key]}{id}：{data["title"]}]({url})")
                         i += 1
                 except Exception as e:
-                    print(f"错误: {e}\n{consts.KEYS[key]}：{id}")
+                    print(f"错误: {e}\n{const.KEYS[key]}：{id}")
         for key, value in reference.items():
             lines[0] = lines[0].replace(key, "".join(value))
         lines[0] = lines[0].replace("</sup><sup>", "，")
@@ -264,8 +263,6 @@ async def chat_completions(request: gtypes.ChatCompletionRequest):
         logger.error("graphrag search engines is not initialized")
         raise HTTPException(status_code=500, detail="graphrag search engines is not initialized")
 
-    request.model = get_latest_model(request.model)
-
     try:
         conversation_history = None
         if len(request.messages) > 1:
@@ -290,8 +287,6 @@ async def chat_completions(request: gtypes.ChatCompletionRequest):
 
 @app.post("/v1/advice_questions", response_model=gtypes.QuestionGenResult)
 async def get_advice_question(request: gtypes.ChatQuestionGen):
-    request.model = get_latest_model(request.model)
-
     if request.model.endswith("local"):
         local_context = await switch_context(request.model, request.community_level)
         question_gen.context_builder = local_context
@@ -337,13 +332,6 @@ async def switch_context(model: str, community_level: int = 2):
     else:
         raise NotImplementedError(f"model {model} is not supported")
     return context_builder
-
-
-def get_latest_model(model: str):
-    if model in [consts.LATEST_MODEL_LOCAL, consts.LATEST_MODEL_GLOBAL]:
-        latest_dir = utils.get_latest_subdir(settings.data)
-        model = model.replace("GraphRAG-latest", latest_dir)
-    return model
 
 
 if __name__ == "__main__":

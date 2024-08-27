@@ -70,7 +70,7 @@ def create_interface():
                 response_type = gr.Textbox(label="响应类型", placeholder="例如：“一句话”、“几个要点”、“多页报告”等")
                 stream = gr.Checkbox(True, label="流式输出")
             with gr.Column(scale=2):
-                chatbot = gr.Chatbot(label="对话框", layout="panel", placeholder="请在下方输入问题")
+                chatbot = gr.Chatbot(label="对话框", layout="panel", show_copy_button=True, placeholder="请在下方输入问题")
                 query_input = gr.Textbox(placeholder="输入问题", label="输入框", show_copy_button=True)
                 with gr.Row():
                     with gr.Column():

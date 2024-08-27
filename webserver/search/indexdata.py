@@ -1,25 +1,22 @@
+"""索引."""
 import os
 from typing import Optional, cast
 
 import pandas as pd
 
-from graphrag.model import Relationship, Covariate, Entity, CommunityReport, TextUnit
-from graphrag.query.indexer_adapters import read_indexer_relationships, read_indexer_covariates, read_indexer_entities, \
-    read_indexer_reports, read_indexer_text_units
-from ..utils import consts
-
+from webserver import const
 
 pd.set_option("display.max_columns", None)
 
 
 async def get_index_data(input_dir: str, datatype: str, idx: int) -> pd.Series:
-    document_df = pd.read_parquet(f"{input_dir}/{consts.DOCUMENT_TABLE}.parquet")
-    entity_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_TABLE}.parquet")
-    text_unit_df = pd.read_parquet(f"{input_dir}/{consts.TEXT_UNIT_TABLE}.parquet")
-    entity_embedding_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_EMBEDDING_TABLE}.parquet")
-    relationship_df = pd.read_parquet(f"{input_dir}/{consts.RELATIONSHIP_TABLE}.parquet")
-    community_df = pd.read_parquet(f"{input_dir}/{consts.COMMUNITY_TABLE}.parquet")
-    report_df = pd.read_parquet(f"{input_dir}/{consts.COMMUNITY_REPORT_TABLE}.parquet")
+    document_df = pd.read_parquet(f"{input_dir}/{const.DOCUMENT_TABLE}.parquet")
+    entity_df = pd.read_parquet(f"{input_dir}/{const.ENTITY_TABLE}.parquet")
+    text_unit_df = pd.read_parquet(f"{input_dir}/{const.TEXT_UNIT_TABLE}.parquet")
+    entity_embedding_df = pd.read_parquet(f"{input_dir}/{const.ENTITY_EMBEDDING_TABLE}.parquet")
+    relationship_df = pd.read_parquet(f"{input_dir}/{const.RELATIONSHIP_TABLE}.parquet")
+    community_df = pd.read_parquet(f"{input_dir}/{const.COMMUNITY_TABLE}.parquet")
+    report_df = pd.read_parquet(f"{input_dir}/{const.COMMUNITY_REPORT_TABLE}.parquet")
     if datatype == "documents":
         return await get_doc(document_df, idx)
     elif datatype == "entities":
@@ -109,7 +106,7 @@ async def get_entity(
 
 
 async def get_claim(input_dir: str, row_id: Optional[int] = None) -> pd.Series:
-    covariate_file = f"{input_dir}/{consts.COVARIATE_TABLE}.parquet"
+    covariate_file = f"{input_dir}/{const.COVARIATE_TABLE}.parquet"
     if os.path.exists(covariate_file):
         covariate_df = pd.read_parquet(covariate_file)
         return covariate_df[covariate_df["human_readable_id"] == str(row_id)].iloc[0]

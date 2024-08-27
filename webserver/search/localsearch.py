@@ -1,8 +1,8 @@
-import logging
 import os
 
 import pandas as pd
 import tiktoken
+
 from graphrag.model import Entity
 from graphrag.query.context_builder.builders import LocalContextBuilder
 from graphrag.query.context_builder.entity_extraction import EntityVectorStoreKey
@@ -22,12 +22,10 @@ from graphrag.query.structured_search.local_search.mixed_context import (
     LocalSearchMixedContext,
 )
 from graphrag.query.structured_search.local_search.search import LocalSearch
-from graphrag.vector_stores import VectorStoreType, VectorStoreFactory
+from graphrag.vector_stores import VectorStoreFactory, VectorStoreType
 from graphrag.vector_stores.lancedb import LanceDBVectorStore
+from webserver import const
 from webserver.configs import settings
-from webserver.utils import consts
-
-logger = logging.getLogger(__name__)
 
 
 async def load_local_context(
@@ -37,8 +35,8 @@ async def load_local_context(
     community_level: int = 2,
 ) -> LocalContextBuilder:
     # read nodes table to get community and degree data
-    entity_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_TABLE}.parquet")
-    entity_embedding_df = pd.read_parquet(f"{input_dir}/{consts.ENTITY_EMBEDDING_TABLE}.parquet")
+    entity_df = pd.read_parquet(f"{input_dir}/{const.ENTITY_TABLE}.parquet")
+    entity_embedding_df = pd.read_parquet(f"{input_dir}/{const.ENTITY_EMBEDDING_TABLE}.parquet")
 
     entities = read_indexer_entities(entity_df, entity_embedding_df, community_level)
 
@@ -46,7 +44,6 @@ async def load_local_context(
         settings.embeddings.vector_store if settings.embeddings.vector_store else {}
     )
 
-    logger.info(f"Vector Store Args: {vector_store_args}")
     vector_store_type = vector_store_args.get("type", VectorStoreType.LanceDB)
 
     description_embedding_store = __get_embedding_description_store(
@@ -55,10 +52,10 @@ async def load_local_context(
         config_args=vector_store_args,
     )
 
-    relationship_df = pd.read_parquet(f"{input_dir}/{consts.RELATIONSHIP_TABLE}.parquet")
+    relationship_df = pd.read_parquet(f"{input_dir}/{const.RELATIONSHIP_TABLE}.parquet")
     relationships = read_indexer_relationships(relationship_df)
 
-    covariate_file = f"{input_dir}/{consts.COVARIATE_TABLE}.parquet"
+    covariate_file = f"{input_dir}/{const.COVARIATE_TABLE}.parquet"
     if os.path.exists(covariate_file):
         covariate_df = pd.read_parquet(covariate_file)
         claims = read_indexer_covariates(covariate_df)
@@ -66,10 +63,10 @@ async def load_local_context(
     else:
         covariates = None
 
-    report_df = pd.read_parquet(f"{input_dir}/{consts.COMMUNITY_REPORT_TABLE}.parquet")
+    report_df = pd.read_parquet(f"{input_dir}/{const.COMMUNITY_REPORT_TABLE}.parquet")
     reports = read_indexer_reports(report_df, entity_df, community_level)
 
-    text_unit_df = pd.read_parquet(f"{input_dir}/{consts.TEXT_UNIT_TABLE}.parquet")
+    text_unit_df = pd.read_parquet(f"{input_dir}/{const.TEXT_UNIT_TABLE}.parquet")
     text_units = read_indexer_text_units(text_unit_df)
 
     context_builder = LocalSearchMixedContext(

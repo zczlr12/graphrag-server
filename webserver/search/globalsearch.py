@@ -1,18 +1,18 @@
-import os
 import pandas as pd
 import tiktoken
 
 from graphrag.query.context_builder.builders import GlobalContextBuilder
 from graphrag.query.indexer_adapters import read_indexer_entities, read_indexer_reports
 from graphrag.query.llm.base import BaseLLM
-from graphrag.query.structured_search.global_search.callbacks import GlobalSearchLLMCallback
+from graphrag.query.structured_search.global_search.callbacks import (
+    GlobalSearchLLMCallback,
+)
 from graphrag.query.structured_search.global_search.community_context import (
     GlobalCommunityContext,
 )
 from graphrag.query.structured_search.global_search.search import GlobalSearch
-
+from webserver import const
 from webserver.configs import settings
-from webserver.utils import consts
 
 
 async def load_global_context(
@@ -20,9 +20,9 @@ async def load_global_context(
     token_encoder: tiktoken.Encoding | None = None,
     community_level: int = 2,
 ) -> GlobalContextBuilder:
-    final_nodes = pd.read_parquet(f"{input_dir}/{consts.ENTITY_TABLE}.parquet")
-    final_community_reports = pd.read_parquet(f"{input_dir}/{consts.COMMUNITY_REPORT_TABLE}.parquet")
-    final_entities = pd.read_parquet(f"{input_dir}/{consts.ENTITY_EMBEDDING_TABLE}.parquet")
+    final_nodes = pd.read_parquet(f"{input_dir}/{const.ENTITY_TABLE}.parquet")
+    final_community_reports = pd.read_parquet(f"{input_dir}/{const.COMMUNITY_REPORT_TABLE}.parquet")
+    final_entities = pd.read_parquet(f"{input_dir}/{const.ENTITY_EMBEDDING_TABLE}.parquet")
 
     reports = read_indexer_reports(final_community_reports, final_nodes, community_level)
     entities = read_indexer_entities(final_nodes, final_entities, community_level)
