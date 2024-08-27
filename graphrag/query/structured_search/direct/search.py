@@ -3,6 +3,7 @@
 
 """Direct implementation."""
 
+from collections.abc import AsyncGenerator
 from typing import Any
 
 import tiktoken
@@ -77,6 +78,28 @@ class Direct(BaseSearch):
                 llm_calls=1,
                 prompt_tokens=0
             )
+    
+    async def astream_search(
+        self,
+        query: str,
+        conversation_history: ConversationHistory,
+        **kwargs
+    ) -> AsyncGenerator:
+        """Build local search context that fits a single context window and generate answer for the user query."""
+        search_messages = [
+            {
+                "role": turn.role,
+                "content": turn.content
+            } for turn in conversation_history.turns
+        ]
+        search_messages.append({"role": "user", "content": query})
+
+        async for response in self.llm.astream_generate(
+            messages=search_messages,
+            callbacks=self.callbacks,
+            **self.llm_params
+        ):
+            yield response
 
     def search(
         self,

@@ -1,6 +1,7 @@
 """前端用户界面."""
 import json
 import os
+import time
 
 import gradio as gr
 import requests
@@ -40,12 +41,14 @@ def send_message(temperature, timestamp, index, community_level, response_type, 
             },
             stream=stream
         )
-        if not response_type:
-            response_type = "multiple paragraphs"
-        history[-1][-1] = f"***数据库：{timestamp}，搜索方法：{QUERY_TYPES_CN[QUERY_TYPES.index(model)]}，社区层级：{community_level}。***\n\n"
+        history[-1][-1] = f"***数据库：{timestamp}，搜索方法：{QUERY_TYPES_CN[QUERY_TYPES.index(model)]}，社区层级：{community_level}。***\n"
         if stream:
             for chunk in response.iter_content(None):
-                history[-1][-1] += json.loads(chunk)["choices"][0]["delta"]["content"]
+                choice = json.loads(chunk)["choices"][0]
+                if choice["finish_reason"]:
+                    history[-1][-1] = f"***数据库：{timestamp}，搜索方法：{QUERY_TYPES_CN[QUERY_TYPES.index(model)]}，社区层级：{community_level}。***\n"
+                history[-1][-1] += choice["delta"]["content"]
+                time.sleep(0.02)
                 yield history
         else:
             history[-1][-1] += response.json()["choices"][0]["message"]["content"]

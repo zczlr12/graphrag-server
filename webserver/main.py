@@ -2,6 +2,8 @@ import asyncio
 import logging
 import os
 import time
+import re
+from typing import List, Tuple
 import uuid
 from typing import Generator
 
@@ -9,10 +11,6 @@ import tiktoken
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse
-<<<<<<< HEAD
-=======
-from fastapi.staticfiles import StaticFiles
->>>>>>> 94937db579b39c0907fc71263fbaf604a9b8ce4b
 from fastapi.middleware.cors import CORSMiddleware
 from jinja2 import Template
 from openai.types import CompletionUsage
@@ -41,10 +39,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-<<<<<<< HEAD
-=======
-app.mount("/static", StaticFiles(directory="webserver/static"), name="static")
->>>>>>> 94937db579b39c0907fc71263fbaf604a9b8ce4b
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -135,6 +129,35 @@ async def startup_event():
     question_gen = await search.build_local_question_gen(llm, token_encoder=token_encoder)
 
 
+async def generate_ref_links(response: str, model: str) -> str:
+    it = re.findall(r"(\[Data:(\w+)\((.+?)\)\])", response)
+    if it:
+        base_url = f"{settings.website_address}/v1/references"
+        lines = [response, "### 参考来源"]
+        index_id = model.removesuffix("-global").removesuffix("-local").removesuffix("-direct")
+        input_dir = os.path.join(settings.data, index_id, "artifacts")
+        reference = {}
+        i = 1
+        for source, key, ids in it:
+            reference[source] = []
+            id_list = ids.replace(" ", "").split(",")
+            for id in id_list:
+                try:
+                    if id.isdigit():
+                        url = f"{base_url}/{index_id}/{key.lower()}/{id}"
+                        data = await search.get_index_data(input_dir, key.lower(), int(id))
+                        reference[source].append(f"<sup>[{i}]({url})</sup>")
+                        lines.append(f"{i}. [{consts.KEYS[key]}{id}：{data["title"]}]({url})")
+                        i += 1
+                except Exception as e:
+                    print(f"错误: {e}\n{consts.KEYS[key]}：{id}")
+        for key, value in reference.items():
+            lines[0] = lines[0].replace(key, "".join(value))
+        lines[0] = lines[0].replace("</sup><sup>", "，")
+        return "\n".join(lines)
+    return response
+
+
 async def generate_chunks(callback, request_model, future: gtypes.TypedFuture[SearchResult]):
     usage = None
     while not future.done():
@@ -161,12 +184,6 @@ async def generate_chunks(callback, request_model, future: gtypes.TypedFuture[Se
             yield chunk.json()
 
     result: SearchResult = future.result()
-    content = ""
-    reference = utils.get_reference(result.response)
-    if reference:
-        index_id = request_model.removesuffix("-global").removesuffix("-local")
-        content = f"\n### 来源\n{utils.generate_ref_links(reference, index_id)}"
-    finish_reason = "stop"
     chunk = ChatCompletionChunk(
         id=f"chatcmpl-{uuid.uuid4().hex}",
         created=int(time.time()),
@@ -175,11 +192,11 @@ async def generate_chunks(callback, request_model, future: gtypes.TypedFuture[Se
         choices=[
             Choice(
                 index=len(callback.response) - 1,
-                finish_reason=finish_reason,
+                finish_reason="stop",
                 delta=ChoiceDelta(
                     role="assistant",
                     # content=result.context_data["entities"].head().to_string()
-                    content=content
+                    content=await generate_ref_links(result.response, request_model)
                 )
             ),
         ],
@@ -203,11 +220,6 @@ async def initialize_search(
 
 async def handle_sync_response(request, search, conversation_history):
     result = await search.asearch(request.messages[-1].content, conversation_history=conversation_history)
-    response = result.response
-    reference = utils.get_reference(response)
-    if reference:
-        index_id = request.model.removesuffix("-global").removesuffix("-local")
-        response += f"\n### 来源\n{utils.generate_ref_links(reference, index_id)}"
     from openai.types.chat.chat_completion import Choice
     completion = ChatCompletion(
         id=f"chatcmpl-{uuid.uuid4().hex}",
@@ -220,7 +232,7 @@ async def handle_sync_response(request, search, conversation_history):
                 finish_reason="stop",
                 message=ChatCompletionMessage(
                     role="assistant",
-                    content=response
+                    content=await generate_ref_links(result.response, request.model)
                 )
             )
         ],

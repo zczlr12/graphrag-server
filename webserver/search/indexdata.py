@@ -150,8 +150,11 @@ async def get_source(
     text_unit["entities"].sort()
     for i, id in enumerate(text_unit["relationships"]):
         relationship = relationship_df[relationship_df["id"] == id].iloc[0]
-        text_unit["relationships"][i] = (int(relationship["human_readable_id"]), f"{relationship['source']} → {relationship['target']}")
+        text_unit["relationships"][i] = (int(relationship["human_readable_id"]), f"{relationship['source']} ↔ {relationship['target']}")
     text_unit["relationships"].sort()
+    text_unit["title"] = text_unit["text"].replace("\n", "")
+    if len(text_unit["title"]) > 50:
+        text_unit["title"] = text_unit["title"][:50] + "..."
     return text_unit
 
 
@@ -182,9 +185,8 @@ async def get_report(
     report = report_df[report_df["community"].astype(int) == row_id].iloc[0]
     for i, relationship_id in enumerate(report["relationships"]):
         relationship = relationship_df[relationship_df["id"] == relationship_id].iloc[0]
-        report["relationships"][i] = (int(relationship["human_readable_id"]), f"{relationship['source']} → {relationship['target']}")
+        report["relationships"][i] = (int(relationship["human_readable_id"]), f"{relationship['source']} ↔ {relationship['target']}")
     report["relationships"].sort()
-    print(type(report["relationships"]))
     report["sources"] = {}
     for source_id in report["text_unit_ids"][0].split(","):
         text_unit = text_unit_df[text_unit_df["id"] == source_id]
@@ -239,4 +241,5 @@ async def get_relationship(
             relationship["sources"][title] = []
         relationship["sources"][title].append(text_unit.index[0])
         relationship["sources"][title].sort()
+    relationship["title"] = f"{relationship['source'][1]} ↔ {relationship['target'][1]}"
     return relationship

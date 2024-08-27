@@ -30,7 +30,7 @@
         <tr><td>总结</td><td>{{ data["summary"] }}</td></tr>
         <tr><td>具体内容</td><td>{{ data["full_content"] }}</td></tr>
         <tr><td>重要性指数（结果排序用）</td><td>{{ data["rank"] }}</td></tr>
-        <tr><td>所含关系</td><td>{% for i, relationship in data.relationships %}<div>{{ i }}：<a href="/v1/references/{{ index_id }}/relationships/{{ i }}">{{ relationship }}</a></div>{% endfor %}</td></tr>
+        <tr><td>所含关系</td><td>{% for i, relationship in data.relationships %}<div><a href="/v1/references/{{ index_id }}/relationships/{{ i }}">{{ relationship }}</a></div>{% endfor %}</td></tr>
         <tr><td>所含文本块</td><td>{% for doc in data["sources"] %}<div>{{ doc }}：{% for i in data["sources"][doc] %}<a href="/v1/references/{{ index_id }}/sources/{{ i }}">{{ i }}</a> {% endfor %}</div>{% endfor %}</td></tr>
     </table>
 </body>

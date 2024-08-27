@@ -13,3 +13,5 @@ COMMUNITY_TABLE = "create_final_communities"
 
 LATEST_MODEL_LOCAL = "GraphRAG-latest-local"
 LATEST_MODEL_GLOBAL = "GraphRAG-latest-global"
+
+KEYS = {"Sources": "文本块", "Entities": "实体", "Relationships": "关系", "Claims": "声明", "Reports": "社区报告"}
