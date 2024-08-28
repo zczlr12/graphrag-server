@@ -136,13 +136,16 @@ async def generate_ref_links(response: str, model: str) -> str:
         index_id = model.removesuffix("-global").removesuffix("-local").removesuffix("-direct")
         input_dir = os.path.join(settings.data, index_id, "artifacts")
         reference = {}
+        cache = []
         i = 1
         for source, key, ids in it:
-            reference[source] = []
+            if source not in reference:
+                reference[source] = []
             id_list = ids.replace(" ", "").split(",")
             for id in id_list:
                 try:
-                    if id.isdigit():
+                    if id.isdigit() and (key, id) not in cache:
+                        cache.append((key, id))
                         url = f"{base_url}/{index_id}/{key.lower()}/{id}"
                         data = await search.get_index_data(input_dir, key.lower(), int(id))
                         reference[source].append(f"<sup>[{i}]({url})</sup>")
@@ -180,7 +183,7 @@ async def generate_chunks(callback, request_model, future: gtypes.TypedFuture[Se
                     )
                 ]
             )
-            yield chunk.json()
+            yield chunk.json() + "\n"
 
     result: SearchResult = future.result()
     chunk = ChatCompletionChunk(
