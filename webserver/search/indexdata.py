@@ -34,7 +34,9 @@ async def get_index_data(input_dir: str, datatype: str, idx: int) -> pd.Series:
 
 
 async def get_doc(document_df: pd.DataFrame, idx: int) -> pd.Series:
-    return document_df.iloc[idx]
+    document_series = document_df.iloc[idx]
+    document_series["title"] = document_series["title"].removesuffix(".txt")
+    return document_series
 
 
 # async def get_entity(input_dir: str, row_id: Optional[int] = None) -> Entity:
@@ -82,7 +84,7 @@ async def get_entity(
         text_unit = text_unit_df[text_unit_df["id"] == source_id]
         title = document_df[
             document_df["id"] == text_unit["document_ids"].iloc[0][0]
-        ].iloc[0]["title"]
+        ].iloc[0]["title"].removesuffix(".txt")
         if not entity["sources"].get(title):
             entity["sources"][title] = []
         entity["sources"][title].append(text_unit.index[0])
@@ -140,7 +142,7 @@ async def get_source(
     for i, id in enumerate(text_unit["documents"]):
         index = document_df[document_df["id"] == id].index[0]
         document = document_df[document_df["id"] == id].iloc[0]
-        text_unit["documents"][i] = (index, document["title"])
+        text_unit["documents"][i] = (index, document["title"].removesuffix(".txt"))
     for i, id in enumerate(text_unit["entities"]):
         entity = entity_embedding_df[entity_embedding_df["id"] == id].iloc[0]
         text_unit["entities"][i] = (entity["human_readable_id"], entity["name"])
@@ -189,7 +191,7 @@ async def get_report(
         text_unit = text_unit_df[text_unit_df["id"] == source_id]
         title = document_df[
             document_df["id"] == text_unit["document_ids"].iloc[0][0]
-        ].iloc[0]["title"]
+        ].iloc[0]["title"].removesuffix(".txt")
         if not report["sources"].get(title):
             report["sources"][title] = []
         report["sources"][title].append(text_unit.index[0])
@@ -233,7 +235,7 @@ async def get_relationship(
         text_unit = text_unit_df[text_unit_df["id"] == source_id]
         title = document_df[
             document_df["id"] == text_unit["document_ids"].iloc[0][0]
-        ].iloc[0]["title"]
+        ].iloc[0]["title"].removesuffix(".txt")
         if not relationship["sources"].get(title):
             relationship["sources"][title] = []
         relationship["sources"][title].append(text_unit.index[0])

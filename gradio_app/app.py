@@ -85,23 +85,22 @@ def create_interface(g):
                 temperature = gr.Slider(0, 2, 0, step=0.1, label="模型温度", info="模型生成文本的随机程度")
                 timestamp = gr.Dropdown(INDEX_FOLDERS, value=INDEX_FOLDERS[-1], label="数据库")
                 query_type = gr.Radio(QUERY_TYPES_CN, value="自动", type="index", label="搜索方法", info="自动：自动判断，局部：图元素+原文本，全局：社区报告，无：仅历史记录")
-                community_level = gr.Slider(0, 3, 2, step=1, label="社区层级")
+                community_level = gr.Slider(0, 3, 2, step=1, label="社区层级", info="社区的细粒程度")
                 response_type = gr.Textbox(label="响应类型", placeholder="例如：“一句话”、“几个要点”、“多页报告”等")
                 stream = gr.Checkbox(True, label="流式输出")
             with gr.Column(scale=2):
-                chatbot = gr.Chatbot(label="对话框", layout="panel", show_copy_button=True, placeholder="请在下方输入问题")
-                query_input = gr.Textbox(placeholder="输入问题", label="输入框", show_copy_button=True)
-                with gr.Row():
-                    with gr.Column():
-                        query_btn = gr.Button("发送", variant="primary")
-                    with gr.Column():
-                        gr.ClearButton(chatbot, value="清空聊天记录")
+                chatbot = gr.Chatbot(label="对话框", show_copy_button=True, layout="panel", placeholder="请在下方输入问题")
+                gr.ClearButton(chatbot, value="清空聊天记录")
+                with gr.Group():
+                    with gr.Row():
+                        query_input = gr.Textbox(placeholder="输入问题", label="输入框", scale=7, show_copy_button=True)
+                        query_btn = gr.Button("发送", variant="primary", scale=1)
                 gr.Markdown("### 你可能想问")
-                q1 = gr.Button(g[0])
-                q2 = gr.Button(g[1])
-                q3 = gr.Button(g[2])
-                q4 = gr.Button(g[-2])
-                q5 = gr.Button(g[-1])
+                q1 = gr.DuplicateButton(g[0])
+                q2 = gr.DuplicateButton(g[1])
+                q3 = gr.DuplicateButton(g[2])
+                q4 = gr.DuplicateButton(g[-2])
+                q5 = gr.DuplicateButton(g[-1])
 
         timestamp.change(
             get_questions,

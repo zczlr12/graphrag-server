@@ -2,38 +2,34 @@
 <html>
 <head>
     <title>关系{{ idx }}：{{ data["title"] }}</title>
-    <style>
-        table {
-            margin: auto;
-            border-collapse: collapse;
-            width: 50%;
-        }
-        th, td {
-            border: 1px solid black;
-            padding: 8px;
-        }
-        th {
-            background-color: #f2f2f2;
-            text-align: center;
-        }
-        td {
-            text-align: left;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <h1 style="text-align: center;">关系{{ data["human_readable_id"] }}：{{ data["title"] }}</h1>
-    <table>
-        <tr><th>属性</th><th>值</th></tr>
-        <tr><td>ID</td><td>{{ data.id }}</td></tr>
-        <tr><td>起点实体</td><td><a href="/v1/references/{{ index_id }}/entities/{{ data["source"][0] }}">{{ data["source"][1] }}</a></td></tr>
-        <tr><td>终点实体</td><td><a href="/v1/references/{{ index_id }}/entities/{{ data["target"][0] }}">{{ data["target"][1] }}</a></td></tr>
-        <tr><td>重数</td><td>{{ data["weight"] }}</td></tr>
-        <tr><td>描述</td><td>{{ data["description"] }}</td></tr>
-        <tr><td>所在文本块</td><td>{% for doc in data["sources"] %}<div>{{ doc }}：{% for i in data["sources"][doc] %}<a href="/v1/references/{{ index_id }}/sources/{{ i }}">{{ i }}</a> {% endfor %}</div>{% endfor %}</td></tr>
-        <tr><td>起点度数</td><td>{{ data["source_degree"] }}</td></tr>
-        <tr><td>终点度数</td><td>{{ data["target_degree"] }}</td></tr>
-        <tr><td>重要性指数（起点和终点的度数之和）</td><td>{{ data["rank"] }}</td></tr>
-    </table>
+    <div id="markdownDisplay">
+---
+
+***起点：<a href="/v1/references/{{ index_id }}/entities/{{ data["source"][0] }}">{{ data["source"][1] }}</a>，终点：<a href="/v1/references/{{ index_id }}/entities/{{ data["target"][0] }}">{{ data["target"][1] }}</a>，重数：{{ data["weight"] }}，起点度数：{{ data["source_degree"] }}，终点度数：{{ data["target_degree"] }}，重要性指数（起点和终点的度数之和）：{{ data["rank"] }}***
+
+---
+
+{{ data["description"] }}
+
+---
+
+### 所在章节和文本块
+
+{% for doc in data["sources"] %}
+#### {{ doc }}
+
+{% for i in data["sources"][doc] %}<a href="/v1/references/{{ index_id }}/sources/{{ i }}">{{ i }}</a> {% endfor %}
+
+{% endfor %}
+    </div>
+    <script>
+        var text = document.getElementById('markdownDisplay').innerHTML;
+        var markdownContent = marked.parse(text);
+        document.getElementById('markdownDisplay').innerHTML = markdownContent;
+    </script>
 </body>
 </html>

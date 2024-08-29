@@ -2,35 +2,41 @@
 <html>
 <head>
     <title>文本块{{ idx }}</title>
-    <style>
-        table {
-            margin: auto;
-            border-collapse: collapse;
-            width: 50%;
-        }
-        th, td {
-            border: 1px solid black;
-            padding: 8px;
-        }
-        th {
-            background-color: #f2f2f2;
-            text-align: center;
-        }
-        td {
-            text-align: left;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <h1 style="text-align: center;">文本块{{ idx }}</h1>
-    <table>
-        <tr><th>属性</th><th>值</th></tr>
-        <tr><td>ID</td><td>{{ data.id }}</td></tr>
-        <tr><td>文本</td><td>{{ data.text }}</td></tr>
-        <tr><td>令牌数</td><td>{{ data.n_tokens }}</td></tr>
-        <tr><td>所在文档</td><td>{% for i, document in data.documents %}<a href="/v1/references/{{ index_id }}/documents/{{ i }}">{{ document }}</a>{% endfor %}</td></tr>
-        <tr><td>所含实体</td><td>{% for i, entity in data.entities %}<div>{{ i }}：<a href="/v1/references/{{ index_id }}/entities/{{ i }}">{{ entity }}</a></div>{% endfor %}</td></tr>
-        <tr><td>所含关系</td><td>{% for i, relationship in data.relationships %}<div><a href="/v1/references/{{ index_id }}/relationships/{{ i }}">{{ relationship }}</a></div>{% endfor %}</td></tr>
-    </table>
+    <div id="markdownDisplay">
+---
+
+***令牌数：{{ data.n_tokens }}，所在章节：{% for i, document in data.documents %}<a href="/v1/references/{{ index_id }}/documents/{{ i }}">{{ document }}</a>{% endfor %}***
+
+---
+
+{{ data.text }}
+
+---
+
+### 所含实体
+
+{% for i, entity in data.entities %}
+{{ i }}：<a href="/v1/references/{{ index_id }}/entities/{{ i }}">{{ entity }}</a>
+
+{% endfor %}
+
+---
+
+### 所含关系
+
+{% for i, relationship in data.relationships %}
+{{ i }}：<a href="/v1/references/{{ index_id }}/relationships/{{ i }}">{{ relationship }}</a>
+
+{% endfor %}
+    </div>
+    <script>
+        var text = document.getElementById('markdownDisplay').innerHTML;
+        var markdownContent = marked.parse(text);
+        document.getElementById('markdownDisplay').innerHTML = markdownContent;
+    </script>
 </body>
 </html>
